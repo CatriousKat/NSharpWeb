@@ -42,15 +42,15 @@ const nsharpweb = {
         const fs = {
             open: () => {},
             read: async (filename) => {
-                // Determine target filename: parameter, or fallback to the last picked file
-                const target = filename || lastPicked;
-                
-                // If we already have it cached, return it instantly without triggering a blocked browser dialog
+                // If a filename is passed, use it. Otherwise, use the last picked file.
+                const target = (filename && filename !== "") ? filename : lastPicked;
+
+                // If we have it in cache, return it immediately without any browser dialog blocks
                 if (target && fileCache.has(target)) {
                     return fileCache.get(target);
                 }
 
-                // Otherwise, prompt user to pick a file
+                // Fallback: only open dialog if absolutely nothing has been picked yet
                 return new Promise((resolve) => {
                     const input = document.createElement('input');
                     input.type = 'file';
