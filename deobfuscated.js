@@ -21,7 +21,7 @@ const nsharpweb = {
                 return new Promise((resolve) => {
                     const input = document.createElement('input');
                     input.type = 'file';
-                    input.accept = '*/*'; // Allow all file types
+                    input.accept = '*/*';
                     input.onchange = async (e) => {
                         const file = e.target.files[0];
                         if (file) {
@@ -42,13 +42,19 @@ const nsharpweb = {
         const fs = {
             open: () => {},
             read: async (filename) => {
-                if (filename && fileCache.has(filename)) {
-                    return fileCache.get(filename);
+                // Determine target filename: parameter, or fallback to the last picked file
+                const target = filename || lastPicked;
+                
+                // If we already have it cached, return it instantly without triggering a blocked browser dialog
+                if (target && fileCache.has(target)) {
+                    return fileCache.get(target);
                 }
+
+                // Otherwise, prompt user to pick a file
                 return new Promise((resolve) => {
                     const input = document.createElement('input');
                     input.type = 'file';
-                    input.accept = '*/*'; // Allow all file types
+                    input.accept = '*/*';
                     input.onchange = async (e) => {
                         const file = e.target.files[0];
                         if (!file) {
