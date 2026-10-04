@@ -4,8 +4,8 @@ const nsharpweb = {
         let fileCache = new Map();
 
         const print = (...args) => {
-            const output = args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg)).join(' ');
-            console.log(output);
+            const literalText = args.join(' ');
+            console.log(literalText);
         };
 
         const gui = {
@@ -47,12 +47,11 @@ const nsharpweb = {
             read: async (filename) => {
                 const target = (filename && filename !== "") ? filename : lastPicked;
                 
-                // Return cached file content instantly without triggering browser dialog blocks
+
                 if (target && fileCache.has(target)) {
                     return fileCache.get(target);
                 }
                 
-                // Fallback if no file was picked yet
                 return fileCache.get(lastPicked) || "";
             },
             write: (content) => {
@@ -133,6 +132,16 @@ const nsharpweb = {
             .split('\n')
             .map(line => {
                 let trimmed = line.trim();
+                
+                if (/^(print|gui\.(alert|error|info|notify))\s*\(/.test(trimmed)) {
+                    const match = trimmed.match(/^(print|gui\.(alert|error|info|notify))\s*\((.*)\)$/);
+                    if (match) {
+                        const fnName = match[1];
+                        const innerExpr = match[3].trim();
+                        line = line.replace(innerExpr, JSON.stringify(innerExpr));
+                    }
+                }
+
                 if (
                     trimmed.includes('=') && 
                     !trimmed.includes('==') && 
