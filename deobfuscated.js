@@ -4,8 +4,7 @@ const nsharpweb = {
         let fileCache = new Map();
 
         const print = (...args) => {
-            const literalText = args.join(' ');
-            console.log(literalText);
+            console.log(args.join(' '));
         };
 
         const gui = {
@@ -46,12 +45,9 @@ const nsharpweb = {
             open: () => {},
             read: async (filename) => {
                 const target = (filename && filename !== "") ? filename : lastPicked;
-                
-
                 if (target && fileCache.has(target)) {
                     return fileCache.get(target);
                 }
-                
                 return fileCache.get(lastPicked) || "";
             },
             write: (content) => {
@@ -124,41 +120,14 @@ const nsharpweb = {
             }
         };
 
-        let jsCode = script
+        let jsCode = '"use strict";\n' + script
             .replace(/\/\/.*/g, '')
             .replace(/\belseif\s*\(/g, 'else if (')
             .replace(/\belseif\b/g, 'else if')
             .replace(/\bif\s+([^\({]+)\{/g, 'if ($1) {')
             .split('\n')
             .map(line => {
-                let trimmed = line.trim();
-                
-                if (/^(print|gui\.(alert|error|info|notify))\s*\(/.test(trimmed)) {
-                    const match = trimmed.match(/^(print|gui\.(alert|error|info|notify))\s*\((.*)\)$/);
-                    if (match) {
-                        const fnName = match[1];
-                        const innerExpr = match[3].trim();
-                        line = line.replace(innerExpr, JSON.stringify(innerExpr));
-                    }
-                }
-
-                if (
-                    trimmed.includes('=') && 
-                    !trimmed.includes('==') && 
-                    !trimmed.startsWith('if') && 
-                    !trimmed.startsWith('else') &&
-                    !trimmed.startsWith('let ') &&
-                    !trimmed.startsWith('const ')
-                ) {
-                    const parts = trimmed.split('=');
-                    const varName = parts[0].trim();
-                    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
-                        line = line.replace(varName, `let ${varName}`);
-                    }
-                }
-                
                 line = line.replace(/\b(fs\.read|fs\.filepicker|gui\.filepicker|net\.get|net\.download|net\.post|net\.put|net\.patch|net\.delete)\b/g, 'await $1');
-                
                 return line;
             })
             .join('\n');
