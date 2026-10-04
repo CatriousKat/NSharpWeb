@@ -3,7 +3,10 @@ const nsharpweb = {
         let lastPicked = "";
         let fileCache = new Map();
 
-        const print = (...args) => console.log(...args);
+        const print = (...args) => {
+            const output = args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg)).join(' ');
+            console.log(output);
+        };
 
         const gui = {
             alert: (msg) => window.alert(msg),
@@ -42,32 +45,15 @@ const nsharpweb = {
         const fs = {
             open: () => {},
             read: async (filename) => {
-                // If a filename is passed, use it. Otherwise, use the last picked file.
                 const target = (filename && filename !== "") ? filename : lastPicked;
-
-                // If we have it in cache, return it immediately without any browser dialog blocks
+                
+                // Return cached file content instantly without triggering browser dialog blocks
                 if (target && fileCache.has(target)) {
                     return fileCache.get(target);
                 }
-
-                // Fallback: only open dialog if absolutely nothing has been picked yet
-                return new Promise((resolve) => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '*/*';
-                    input.onchange = async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) {
-                            resolve("");
-                            return;
-                        }
-                        lastPicked = file.name;
-                        const text = await file.text();
-                        fileCache.set(file.name, text);
-                        resolve(text);
-                    };
-                    input.click();
-                });
+                
+                // Fallback if no file was picked yet
+                return fileCache.get(lastPicked) || "";
             },
             write: (content) => {
                 const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
